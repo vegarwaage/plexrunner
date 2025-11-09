@@ -1,4 +1,4 @@
 project.manifest = manifest.xml
 
-forerunner970.resourcePath = resources
-forerunner970.sourcePath = source
+fr970.resourcePath = resources
+fr970.sourcePath = source

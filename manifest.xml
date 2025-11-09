@@ -1,11 +1,10 @@
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
     <iq:application entry="PlexRunnerApp" id="820bea87-a91f-4e8e-a7cf-5cf7a24f9a93" launcherIcon="@Drawables.LauncherIcon" minSdkVersion="5.2.0" name="@Strings.AppName" type="audio-content-provider-app" version="0.1.0">
         <iq:products>
-            <iq:product id="forerunner970"/>
+            <iq:product id="fr970"/>
         </iq:products>
         <iq:permissions>
             <iq:uses-permission id="Communications"/>
-            <iq:uses-permission id="Storage"/>
         </iq:permissions>
         <iq:languages>
             <iq:language>eng</iq:language>
