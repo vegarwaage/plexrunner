@@ -26,8 +26,7 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
             System.println("Sync Now selected");
             // TODO: Start sync process
         } else if (id == :settings) {
-            System.println("Settings selected");
-            // TODO: Show settings view
+            WatchUi.pushView(new SettingsView(), new SettingsDelegate(), WatchUi.SLIDE_LEFT);
         }
     }
 

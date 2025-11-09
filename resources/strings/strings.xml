@@ -1,4 +1,11 @@
 <strings>
     <string id="AppName">PlexRunner</string>
     <string id="MainMenuTitle">PlexRunner</string>
+    <string id="SettingsTitle">Settings</string>
+    <string id="PlexStatus">Plex Status</string>
+    <string id="Server">Server</string>
+    <string id="Authenticate">Authenticate</string>
+    <string id="ClearData">Clear Data</string>
+    <string id="Connected">Connected</string>
+    <string id="NotConnected">Not Connected</string>
 </strings>
