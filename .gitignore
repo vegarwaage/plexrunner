@@ -1,0 +1,18 @@
+# Git worktrees directory
+.worktrees/
+
+# Connect IQ build artifacts
+bin/
+*.iq
+*.prg
+*.debug.xml
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
