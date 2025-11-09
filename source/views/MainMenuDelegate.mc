@@ -1,0 +1,38 @@
+using Toybox.WatchUi;
+using Toybox.System;
+
+// ABOUTME: Main menu input delegate handling menu item selection
+// ABOUTME: Routes to appropriate view based on user selection
+
+class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
+
+    function initialize() {
+        Menu2InputDelegate.initialize();
+    }
+
+    function onSelect(item) {
+        var id = item.getId();
+
+        if (id == :continueReading) {
+            System.println("Continue Reading selected");
+            // TODO: Show continue reading view
+        } else if (id == :allAudiobooks) {
+            System.println("All Audiobooks selected");
+            // TODO: Show all audiobooks view
+        } else if (id == :downloaded) {
+            System.println("Downloaded selected");
+            // TODO: Show downloaded audiobooks view
+        } else if (id == :syncNow) {
+            System.println("Sync Now selected");
+            // TODO: Start sync process
+        } else if (id == :settings) {
+            System.println("Settings selected");
+            // TODO: Show settings view
+        }
+    }
+
+    function onBack() {
+        // Exit app when back pressed from main menu
+        System.exit();
+    }
+}
