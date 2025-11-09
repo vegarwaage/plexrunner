@@ -8,4 +8,11 @@
     <string id="ClearData">Clear Data</string>
     <string id="Connected">Connected</string>
     <string id="NotConnected">Not Connected</string>
+    <string id="AuthTitle">Authenticate</string>
+    <string id="AuthInstructions">Visit plex.tv/link</string>
+    <string id="AuthEnterCode">Enter this code</string>
+    <string id="AuthLoading">Loading...</string>
+    <string id="AuthChecking">Checking...</string>
+    <string id="AuthSuccess">Authenticated!</string>
+    <string id="AuthCancelled">Cancelled</string>
 </strings>

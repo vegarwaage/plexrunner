@@ -19,7 +19,10 @@ class SettingsDelegate extends WatchUi.Menu2InputDelegate {
             System.println("Server: " + PlexConfig.getServerUrl());
         } else if (id == :authenticate) {
             System.println("Starting authentication...");
-            // TODO: Start PIN-based OAuth flow
+            // Show PIN authentication view
+            var authView = new AuthView();
+            var authDelegate = new AuthDelegate(authView);
+            WatchUi.pushView(authView, authDelegate, WatchUi.SLIDE_LEFT);
         } else if (id == :clearData) {
             PlexConfig.clear();
             System.println("Data cleared");
