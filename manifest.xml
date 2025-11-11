@@ -1,0 +1,13 @@
+<iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
+    <iq:application entry="PlexRunnerApp" id="7362c2a0f1805be30d6fdfa43b1178bb" launcherIcon="@Drawables.LauncherIcon" minApiLevel="5.2.0" name="@Strings.AppName" type="audio-content-provider-app" version="0.1.0">
+        <iq:products>
+            <iq:product id="fr970"/>
+        </iq:products>
+        <iq:permissions>
+            <iq:uses-permission id="Communications"/>
+        </iq:permissions>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+    </iq:application>
+</iq:manifest>

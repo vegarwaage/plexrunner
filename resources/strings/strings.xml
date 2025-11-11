@@ -1,0 +1,14 @@
+<resources>
+    <strings>
+        <string id="AppName">PlexRunner</string>
+        <string id="SyncConfigTitle">Sync Status</string>
+        <string id="PlaybackConfigTitle">Now Playing</string>
+        <string id="NoAudiobooks">No audiobooks synced</string>
+        <string id="Syncing">Syncing...</string>
+        <string id="LastSync">Last sync:</string>
+        <string id="NeverSynced">Never</string>
+        <string id="ServerUrl">Plex Server URL</string>
+        <string id="AuthToken">Auth Token</string>
+        <string id="LibraryName">Library Name</string>
+    </strings>
+</resources>

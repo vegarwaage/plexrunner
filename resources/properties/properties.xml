@@ -1,0 +1,5 @@
+<properties>
+    <property id="serverUrl" type="string"></property>
+    <property id="authToken" type="string"></property>
+    <property id="libraryName" type="string">Music</property>
+</properties>
