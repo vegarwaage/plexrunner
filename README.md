@@ -6,13 +6,14 @@ PlexRunner integrates with Garmin's native Music Player to provide audiobooks fr
 
 ## Features
 
-- ✅ Browse and select audiobooks from Plex library (via Garmin Connect)
+- ✅ Browse and select audiobooks from Plex library (via companion mobile app)
 - ✅ Download audiobooks to watch storage
 - ✅ Native Music Player integration (standard Garmin playback controls)
 - ✅ Hierarchical navigation (audiobooks → chapters)
 - ✅ Position tracking with opportunistic sync to Plex
 - ✅ 100% offline playback support
 - ✅ Battery-efficient native audio session management
+- ✅ React Native companion app for iOS and Android
 
 ## Architecture
 
@@ -64,15 +65,16 @@ Settings sync automatically to watch via `Application.Properties`.
 
 ## Usage Flow
 
-### 1. Sync Audiobooks (via Garmin Connect)
+### 1. Sync Audiobooks (via Companion App)
 
-1. Open Garmin Connect app on phone
-2. Navigate to PlexRunner → Audiobooks
-3. Browse your Plex library
+1. Install PlexRunner Companion app on your phone (see `companion/` directory)
+2. Configure Plex server connection in companion app
+3. Browse your Plex audiobook library
 4. Select audiobooks to sync to watch
-5. Trigger sync
+5. Tap "Sync to Watch" button
 
 **What happens:**
+- Companion app sends audiobook list to watch via Garmin SDK
 - Watch downloads audiobook metadata from Plex
 - Audio files download sequentially with progress updates
 - ContentRef IDs registered with media system
@@ -181,14 +183,15 @@ The optional configuration view methods (`getSyncConfigurationView()` and `getPl
 
 **Workaround:** Check Garmin Connect app for sync status.
 
-### Garmin Connect Companion App Required
+### Companion Mobile App
 
-PlexRunner requires a companion mobile app (not included) to:
-- Browse Plex library on phone
-- Populate the `syncList` property with audiobook ratingKeys
-- Trigger sync from Garmin Connect
+PlexRunner includes a React Native companion app for iOS and Android:
+- Browse Plex library on phone with cover art
+- Select audiobooks for sync
+- Send sync list to watch via Garmin Connect IQ SDK
+- Simple setup and configuration
 
-**Current Status:** The watch app is complete, but requires manual property setting for testing.
+**Location:** See `companion/` directory for source code and documentation.
 
 ### Media Encoding
 
