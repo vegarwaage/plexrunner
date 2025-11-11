@@ -1,0 +1,11 @@
+<settings>
+    <setting propertyKey="@Properties.serverUrl" title="@Strings.ServerUrl">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+    <setting propertyKey="@Properties.authToken" title="@Strings.AuthToken">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+    <setting propertyKey="@Properties.libraryName" title="@Strings.LibraryName">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+</settings>
