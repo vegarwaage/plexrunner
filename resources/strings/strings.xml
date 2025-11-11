@@ -15,4 +15,13 @@
     <string id="AuthChecking">Checking...</string>
     <string id="AuthSuccess">Authenticated!</string>
     <string id="AuthCancelled">Cancelled</string>
+    <string id="AudiobooksTitle">Audiobooks</string>
+    <string id="Loading">Loading...</string>
+    <string id="Error">Error</string>
+    <string id="Retry">Retry</string>
+    <string id="NoAudiobooks">No audiobooks</string>
+    <string id="CheckLibrary">Check library</string>
+    <string id="ConnectionFailed">Connection failed</string>
+    <string id="LoadFailed">Load failed</string>
+    <string id="NoMusicLibrary">No Music library</string>
 </strings>
