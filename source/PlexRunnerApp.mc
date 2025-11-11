@@ -23,7 +23,7 @@ class PlexRunnerApp extends Application.AudioContentProviderApp {
 
     // Required: Return content delegate for catalog
     function getContentDelegate(args as Application.PersistableType) as Media.ContentDelegate {
-        return new StubContentDelegate();
+        return new ContentDelegate();
     }
 
     // Required: Return sync delegate for downloads (deprecated but still used)
@@ -33,11 +33,4 @@ class PlexRunnerApp extends Application.AudioContentProviderApp {
 
     // Note: getSyncConfigurationView and getPlaybackConfigurationView are optional
     // and not implemented yet - the base class provides default behavior
-}
-
-// Stub ContentDelegate to satisfy compilation
-class StubContentDelegate extends Media.ContentDelegate {
-    function initialize() {
-        ContentDelegate.initialize();
-    }
 }
