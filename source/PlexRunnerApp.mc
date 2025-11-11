@@ -36,12 +36,19 @@ class PlexRunnerApp extends Application.AudioContentProviderApp {
     }
 
     // Handle messages from companion app
-    function onMessage(msg as Lang.Dictionary) as Void {
-        System.println("Received message from companion app: " + msg);
+    function onMessage(msg as Communications.PhoneAppMessage) as Void {
+        System.println("Received message from companion app");
+
+        if (!(msg.data instanceof Lang.Dictionary)) {
+            System.println("Error: Message data is not a Dictionary");
+            return;
+        }
+
+        var payload = msg.data as Lang.Dictionary;
 
         // Check for syncList message type
-        if (msg[:type] != null && msg[:type].equals("syncList")) {
-            var syncList = msg[:data];
+        if (payload[:type] != null && payload[:type].equals("syncList")) {
+            var syncList = payload[:data];
 
             if (syncList != null && syncList instanceof Lang.Array) {
                 // Store syncList in Application.Properties for SyncDelegate
@@ -54,7 +61,7 @@ class PlexRunnerApp extends Application.AudioContentProviderApp {
                 System.println("Error: Invalid syncList data format");
             }
         } else {
-            System.println("Error: Unknown message type: " + msg[:type]);
+            System.println("Error: Unknown message type: " + payload[:type]);
         }
     }
 
