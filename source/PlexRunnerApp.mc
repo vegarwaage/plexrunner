@@ -31,6 +31,8 @@ class PlexRunnerApp extends Application.AudioContentProviderApp {
         return new SyncDelegate();
     }
 
-    // Note: getSyncConfigurationView and getPlaybackConfigurationView are optional
-    // and not implemented yet - the base class provides default behavior
+    // Note: SyncConfigurationView and PlaybackConfigurationView exist in source/views/
+    // but are not hooked up yet due to API signature issues with optional configuration
+    // view methods (same issue as Task 2). Views will be integrated once API requirements
+    // are clarified.
 }
