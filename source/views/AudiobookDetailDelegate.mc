@@ -84,12 +84,10 @@ class AudiobookDetailMenuDelegate extends WatchUi.Menu2InputDelegate {
 
         if (id == :download) {
             System.println("Download selected for: " + audiobook[:title]);
-            // TODO: Implement download workflow (Task 11)
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            handleDownload(audiobook, metadata);
         } else if (id == :delete) {
             System.println("Delete selected for: " + audiobook[:title]);
-            // TODO: Implement delete workflow
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            handleDelete(audiobook);
         } else if (id == :play) {
             System.println("Play selected for: " + audiobook[:title]);
             // TODO: Implement play workflow (integrate with media player)
@@ -101,5 +99,66 @@ class AudiobookDetailMenuDelegate extends WatchUi.Menu2InputDelegate {
 
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+
+    function handleDownload(audiobook, metadata) {
+        System.println("Queueing download for: " + audiobook[:title]);
+
+        // Build book object for DownloadManager
+        // DownloadManager expects: ratingKey, title, author, duration, parts (array of file URLs)
+        var book = {
+            :ratingKey => audiobook[:ratingKey],
+            :title => audiobook[:title],
+            :author => audiobook[:author],
+            :duration => metadata != null ? metadata[:duration] : null,
+            :parts => [] // Will be populated from metadata parts API in full implementation
+        };
+
+        // For MVP, we'll simulate with empty parts array
+        // In production, this would fetch track URLs from /library/metadata/{ratingKey}
+        // and populate the parts array with actual download URLs
+
+        // Initialize DownloadManager
+        DownloadManager.initialize();
+
+        // Queue the download
+        var success = DownloadManager.queueDownload(book);
+
+        if (success) {
+            System.println("Book queued for download: " + audiobook[:title]);
+            // TODO: Show success message or navigate to download queue view
+        } else {
+            System.println("Failed to queue book (already queued or downloaded)");
+            // TODO: Show appropriate message to user
+        }
+
+        // Close options menu
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+
+        // Refresh detail view to show updated download status
+        _view.onShow();
+    }
+
+    function handleDelete(audiobook) {
+        var ratingKey = audiobook[:ratingKey];
+        System.println("Deleting downloaded book: " + audiobook[:title] + " (key: " + ratingKey + ")");
+
+        // Initialize DownloadManager
+        DownloadManager.initialize();
+
+        // Delete the download
+        var success = DownloadManager.deleteDownload(ratingKey);
+
+        if (success) {
+            System.println("Book deleted successfully");
+        } else {
+            System.println("Failed to delete book");
+        }
+
+        // Close options menu
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+
+        // Refresh detail view to show updated download status
+        _view.onShow();
     }
 }

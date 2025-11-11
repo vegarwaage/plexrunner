@@ -34,12 +34,12 @@ module DownloadManager {
     // Queue audiobook for download
     // book: Dictionary with keys: ratingKey, title, author, duration, parts (array of file URLs)
     function queueDownload(book) {
-        if (book == null || book.get("ratingKey") == null) {
+        if (book == null || book[:ratingKey] == null) {
             System.println("ERROR: Invalid book object for queueDownload");
             return false;
         }
 
-        var ratingKey = book.get("ratingKey");
+        var ratingKey = book[:ratingKey];
 
         // Check if already downloaded
         if (isDownloaded(ratingKey)) {
@@ -55,8 +55,8 @@ module DownloadManager {
 
         for (var i = 0; i < queue.size(); i++) {
             var item = queue[i];
-            if (item != null && item.get("ratingKey") != null &&
-                item.get("ratingKey").equals(ratingKey)) {
+            if (item != null && item["ratingKey"] != null &&
+                item["ratingKey"].equals(ratingKey)) {
                 System.println("Book " + ratingKey + " already in queue");
                 return false;
             }
@@ -65,7 +65,7 @@ module DownloadManager {
         // Add to queue
         queue.add(book);
         Storage.setValue(KEY_DOWNLOAD_QUEUE, queue);
-        System.println("Queued book: " + book.get("title") + " (key: " + ratingKey + ")");
+        System.println("Queued book: " + book["title"] + " (key: " + ratingKey + ")");
 
         return true;
     }
@@ -88,7 +88,7 @@ module DownloadManager {
 
         // Get first item from queue
         var book = queue[0];
-        if (book == null) {
+        if (book == null || !(book instanceof Lang.Dictionary)) {
             System.println("ERROR: Invalid book in queue");
             return false;
         }
@@ -102,6 +102,9 @@ module DownloadManager {
         Storage.setValue(KEY_CURRENT_DOWNLOAD, book);
 
         var ratingKey = book.get("ratingKey");
+        if (ratingKey != null) {
+            ratingKey = ratingKey.toString();
+        }
         System.println("Starting download of book: " + ratingKey);
 
         // Start downloading parts
@@ -109,7 +112,8 @@ module DownloadManager {
         if (parts != null && parts instanceof Lang.Array && parts.size() > 0) {
             downloadPart(book, 0);
         } else {
-            System.println("ERROR: No parts found for book " + ratingKey);
+            var keyStr = ratingKey != null ? ratingKey.toString() : "unknown";
+            System.println("ERROR: No parts found for book " + keyStr);
             handlePartDownloadError(book, 0, "No downloadable parts found");
         }
 
@@ -118,7 +122,7 @@ module DownloadManager {
 
     // Download a specific part of an audiobook
     function downloadPart(book, partIndex) {
-        var parts = book.get("parts");
+        var parts = book["parts"];
         if (parts == null || partIndex >= parts.size()) {
             // All parts downloaded - mark as complete
             completeDownload(book);
@@ -126,13 +130,13 @@ module DownloadManager {
         }
 
         var part = parts[partIndex];
-        var ratingKey = book.get("ratingKey");
+        var ratingKey = book["ratingKey"];
 
         System.println("Downloading part " + (partIndex + 1) + " of " + parts.size() +
                       " for book " + ratingKey);
 
         // Build download URL with transcoding
-        var partUrl = part.get("url");
+        var partUrl = part["url"];
         if (partUrl == null) {
             System.println("ERROR: Part URL is null for part " + partIndex);
             handlePartDownloadError(book, partIndex, "Invalid part URL");
@@ -165,7 +169,7 @@ module DownloadManager {
     function handlePartDownloadSuccess(book, partIndex) {
         System.println("Part " + (partIndex + 1) + " downloaded successfully");
 
-        var parts = book.get("parts");
+        var parts = book["parts"];
         var nextPartIndex = partIndex + 1;
 
         if (nextPartIndex < parts.size()) {
@@ -181,7 +185,7 @@ module DownloadManager {
     function handlePartDownloadError(book, partIndex, error) {
         System.println("ERROR downloading part " + (partIndex + 1) + ": " + error);
 
-        var ratingKey = book.get("ratingKey");
+        var ratingKey = book["ratingKey"];
         System.println("Download failed for book: " + ratingKey + " - " + error);
 
         // Clear current download
@@ -196,7 +200,7 @@ module DownloadManager {
 
     // Complete download and update storage
     function completeDownload(book) {
-        var ratingKey = book.get("ratingKey");
+        var ratingKey = book["ratingKey"];
         System.println("Download complete for book: " + ratingKey);
 
         // Add to downloaded books
@@ -207,12 +211,12 @@ module DownloadManager {
 
         // Store book metadata with download timestamp
         var bookInfo = {
-            "ratingKey" => book.get("ratingKey"),
-            "title" => book.get("title"),
-            "author" => book.get("author"),
-            "duration" => book.get("duration"),
+            "ratingKey" => book["ratingKey"],
+            "title" => book["title"],
+            "author" => book["author"],
+            "duration" => book["duration"],
             "downloadedAt" => System.getTimer(),
-            "partCount" => book.get("parts").size()
+            "partCount" => book["parts"].size()
         };
 
         downloaded.put(ratingKey, bookInfo);
@@ -245,8 +249,11 @@ module DownloadManager {
         }
 
         var currentDownload = Storage.getValue(KEY_CURRENT_DOWNLOAD);
-        if (currentDownload != null) {
+        if (currentDownload != null && currentDownload instanceof Lang.Dictionary) {
             var ratingKey = currentDownload.get("ratingKey");
+            if (ratingKey != null) {
+                ratingKey = ratingKey.toString();
+            }
             System.println("Cancelling download of book: " + ratingKey);
         }
 

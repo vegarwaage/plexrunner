@@ -32,4 +32,18 @@
     <string id="Downloaded">Downloaded</string>
     <string id="NotDownloaded">Not Downloaded</string>
     <string id="Options">Options</string>
+    <string id="QueueTitle">Download Queue</string>
+    <string id="QueueOptions">Queue Options</string>
+    <string id="StartDownload">Start Download</string>
+    <string id="CancelDownload">Cancel Download</string>
+    <string id="ClearQueue">Clear Queue</string>
+    <string id="Refresh">Refresh</string>
+    <string id="QueueEmpty">Queue Empty</string>
+    <string id="NoPending">No downloads pending</string>
+    <string id="Downloading">Downloading:</string>
+    <string id="InProgress">In Progress...</string>
+    <string id="Queued">queued</string>
+    <string id="Next">Next:</string>
+    <string id="NoDownloads">No downloads</string>
+    <string id="DownloadFromLibrary">Download from library</string>
 </strings>

@@ -27,7 +27,8 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.pushView(audiobookListView, new AudiobookListDelegate(audiobookListView), WatchUi.SLIDE_LEFT);
         } else if (id == :downloaded) {
             System.println("Downloaded selected");
-            // TODO: Show downloaded audiobooks view
+            var downloadedView = new DownloadedView();
+            WatchUi.pushView(downloadedView, new DownloadedDelegate(downloadedView), WatchUi.SLIDE_LEFT);
         } else if (id == :syncNow) {
             System.println("Sync Now selected");
             // TODO: Start sync process

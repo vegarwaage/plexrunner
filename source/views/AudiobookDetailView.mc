@@ -84,8 +84,10 @@ class AudiobookDetailView extends WatchUi.View {
         metadata[:duration] = getNumberValue(item, "duration");
         metadata[:ratingKey] = getStringValue(item, "ratingKey");
 
-        // Check if downloaded (placeholder for now)
-        metadata[:downloaded] = false;
+        // Check if downloaded using DownloadManager
+        DownloadManager.initialize();
+        var ratingKey = metadata[:ratingKey];
+        metadata[:downloaded] = ratingKey != null ? DownloadManager.isDownloaded(ratingKey) : false;
 
         return metadata;
     }
