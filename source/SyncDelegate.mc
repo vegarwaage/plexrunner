@@ -6,6 +6,7 @@ using Toybox.System;
 using PlexApi;
 using PlexConfig;
 using AudiobookStorage;
+using PositionSync;
 
 // ABOUTME: SyncDelegate handles audiobook downloads from Plex server
 // ABOUTME: Triggered by Garmin Connect when user selects audiobooks to sync
@@ -70,6 +71,13 @@ class SyncDelegate extends Communications.SyncDelegate {
     private function syncNextAudiobook() as Void {
         if (mSyncList.size() == 0) {
             System.println("Sync complete!");
+
+            // Trigger opportunistic position sync after audiobook sync completes
+            if (PlexConfig.isAuthenticated()) {
+                System.println("Syncing positions to Plex after successful audiobook sync");
+                PositionSync.syncAllPositions();
+            }
+
             Media.notifySyncComplete(null);
             return;
         }
