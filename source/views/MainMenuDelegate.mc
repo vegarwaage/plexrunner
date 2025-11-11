@@ -15,7 +15,12 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
 
         if (id == :continueReading) {
             System.println("Continue Reading selected");
-            // TODO: Show continue reading view
+            var continueReadingView = new ContinueReadingView();
+            WatchUi.pushView(continueReadingView, new ContinueReadingDelegate(continueReadingView), WatchUi.SLIDE_LEFT);
+        } else if (id == :collections) {
+            System.println("Collections selected");
+            var collectionsView = new CollectionsView();
+            WatchUi.pushView(collectionsView, new CollectionsDelegate(collectionsView), WatchUi.SLIDE_LEFT);
         } else if (id == :allAudiobooks) {
             System.println("All Audiobooks selected");
             var audiobookListView = new AudiobookListView();

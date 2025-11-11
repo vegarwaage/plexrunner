@@ -25,6 +25,13 @@ class MainMenuView extends WatchUi.Menu2 {
         ));
 
         Menu2.addItem(new WatchUi.MenuItem(
+            "Collections",
+            null,
+            :collections,
+            {}
+        ));
+
+        Menu2.addItem(new WatchUi.MenuItem(
             "All Audiobooks",
             null,
             :allAudiobooks,
