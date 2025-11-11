@@ -78,17 +78,50 @@ class AuthDelegate extends WatchUi.BehaviorDelegate {
 
             // Update view
             if (_view != null) {
-                _view.setStatus("Authenticated!");
+                _view.setStatus("Discovering servers...");
             }
 
-            // Wait briefly to show success message, then return to settings
-            var successTimer = new Timer.Timer();
-            successTimer.start(new Lang.Method(self, :returnToSettings), 1500, false);
-
-            System.println("Authentication complete");
+            // Discover servers to get HTTPS URL
+            PlexApi.discoverServers(
+                new Lang.Method(self, :onServerDiscovered),
+                new Lang.Method(self, :onServerDiscoveryError)
+            );
         } else {
             System.println("Token not yet available, continuing to poll...");
         }
+    }
+
+    // Handle successful server discovery
+    function onServerDiscovered(responseCode as Lang.Number, serverUrl as Lang.String) as Void {
+        System.println("Server discovered: " + serverUrl);
+
+        // Save server URL
+        PlexConfig.setServerUrl(serverUrl);
+
+        // Update view
+        if (_view != null) {
+            _view.setStatus("Authenticated!");
+        }
+
+        // Wait briefly to show success message, then return to settings
+        var successTimer = new Timer.Timer();
+        successTimer.start(new Lang.Method(self, :returnToSettings), 1500, false);
+
+        System.println("Authentication complete");
+    }
+
+    // Handle server discovery error
+    function onServerDiscoveryError(responseCode as Lang.Number, error as Lang.String) as Void {
+        System.println("Server discovery failed: " + error);
+
+        // Still consider auth successful, but use default URL
+        if (_view != null) {
+            _view.setStatus("Authenticated!");
+        }
+
+        // Wait briefly then return to settings
+        var successTimer = new Timer.Timer();
+        successTimer.start(new Lang.Method(self, :returnToSettings), 1500, false);
     }
 
     // Handle token check error
