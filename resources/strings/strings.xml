@@ -24,4 +24,12 @@
     <string id="ConnectionFailed">Connection failed</string>
     <string id="LoadFailed">Load failed</string>
     <string id="NoMusicLibrary">No Music library</string>
+    <string id="DetailTitle">Details</string>
+    <string id="Download">Download</string>
+    <string id="Delete">Delete</string>
+    <string id="Play">Play</string>
+    <string id="Back">Back</string>
+    <string id="Downloaded">Downloaded</string>
+    <string id="NotDownloaded">Not Downloaded</string>
+    <string id="Options">Options</string>
 </strings>

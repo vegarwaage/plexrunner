@@ -31,8 +31,9 @@ class AudiobookListDelegate extends WatchUi.Menu2InputDelegate {
             var audiobook = _view.getAudiobook(id);
             if (audiobook != null) {
                 System.println("Selected audiobook: " + audiobook[:title] + " by " + audiobook[:author]);
-                // TODO: Show audiobook detail view
-                // WatchUi.pushView(new AudiobookDetailView(audiobook), new AudiobookDetailDelegate(), WatchUi.SLIDE_LEFT);
+                // Show audiobook detail view
+                var detailView = new AudiobookDetailView(audiobook);
+                WatchUi.pushView(detailView, new AudiobookDetailDelegate(detailView), WatchUi.SLIDE_LEFT);
             }
         }
     }

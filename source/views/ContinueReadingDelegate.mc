@@ -36,7 +36,9 @@ class ContinueReadingDelegate extends WatchUi.Menu2InputDelegate {
                 System.println("Selected audiobook: " + audiobook[:title]);
                 System.println("Author: " + audiobook[:author]);
                 System.println("Rating Key: " + audiobook[:ratingKey]);
-                // TODO: Show audiobook detail view
+                // Show audiobook detail view
+                var detailView = new AudiobookDetailView(audiobook);
+                WatchUi.pushView(detailView, new AudiobookDetailDelegate(detailView), WatchUi.SLIDE_LEFT);
             }
         }
     }
