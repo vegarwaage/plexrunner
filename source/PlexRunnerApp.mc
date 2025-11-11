@@ -26,9 +26,9 @@ class PlexRunnerApp extends Application.AudioContentProviderApp {
         return new ContentDelegate();
     }
 
-    // Required: Return sync delegate for downloads (deprecated but still used)
+    // Required: Return sync delegate for downloads
     function getSyncDelegate() as Communications.SyncDelegate or Null {
-        return null; // TODO: Implement SyncDelegate
+        return new SyncDelegate();
     }
 
     // Note: getSyncConfigurationView and getPlaybackConfigurationView are optional
