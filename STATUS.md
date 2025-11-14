@@ -8,7 +8,7 @@
 
 ## Overview
 
-PlexRunner is a Garmin Connect IQ AudioContentProviderApp that streams audiobooks from Plex to Garmin watches. The core implementation is complete with a React Native companion app, but physical watch testing is blocked by network connectivity issues.
+PlexRunner is a Garmin Connect IQ AudioContentProviderApp that streams audiobooks from Plex to Garmin watches. The core implementation is complete, but physical watch testing is blocked by network connectivity issues.
 
 ---
 
@@ -24,13 +24,11 @@ PlexRunner is a Garmin Connect IQ AudioContentProviderApp that streams audiobook
 - ✅ Auto-sync on app start (for testing)
 - ✅ Dynamic media format detection (MP3/M4A/M4B/MP4)
 
-### Companion Mobile App
-- ✅ React Native app for iOS and Android
-- ✅ Browse Plex audiobook library with cover art
-- ✅ Select audiobooks for sync
-- ✅ Send sync list to watch via Garmin Connect IQ SDK
-- ✅ Bluetooth device detection
-- ✅ Plex server configuration UI
+### Testing & Deployment Approach
+- ✅ Sideloading via USB for development testing
+- ✅ Manual settings file creation for sideloaded apps
+- ✅ Auto-sync on app start (for testing convenience)
+- ⚠️ Garmin Connect deployment approach (future)
 
 ### Configuration
 - ✅ Settings schema for Garmin Connect app
