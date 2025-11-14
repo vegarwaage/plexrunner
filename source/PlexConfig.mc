@@ -7,19 +7,21 @@ using Toybox.System;
 
 module PlexConfig {
 
-    // Read from Application.Properties (synced from Garmin Connect)
+    // Read from Application.Properties (synced from settings file)
     function getServerUrl() as Lang.String {
         var url = Application.Properties.getValue("serverUrl");
-        if (url == null) {
-            return ""; // No server configured
+        if (url == null || !(url instanceof Lang.String) || (url as Lang.String).length() == 0) {
+            // FALLBACK: Use plain HTTP to local server (simpler, works on watch)
+            return "http://192.168.10.10:32400";
         }
         return url as Lang.String;
     }
 
     function getAuthToken() as Lang.String {
         var token = Application.Properties.getValue("authToken");
-        if (token == null) {
-            return ""; // No token configured
+        if (token == null || !(token instanceof Lang.String) || (token as Lang.String).length() == 0) {
+            // SIMULATOR FALLBACK: Use hardcoded test token for simulator testing
+            return "MvPZ56aMdg5xygacn9vk";
         }
         return token as Lang.String;
     }

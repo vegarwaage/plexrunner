@@ -3,7 +3,7 @@ using Toybox.Graphics;
 using Toybox.Lang;
 using Toybox.Application;
 
-// ABOUTME: SyncConfigurationView shows sync status and last sync time
+// ABOUTME: SyncConfigurationView shows sync status and test sync button
 // ABOUTME: Displayed in Music Player settings for PlexRunner
 
 class SyncConfigurationView extends WatchUi.View {
@@ -26,38 +26,47 @@ class SyncConfigurationView extends WatchUi.View {
         // Title
         dc.drawText(
             dc.getWidth() / 2,
-            40,
+            30,
             Graphics.FONT_MEDIUM,
-            WatchUi.loadResource(Rez.Strings.SyncConfigTitle) as Lang.String,
-            Graphics.TEXT_JUSTIFY_CENTER
-        );
-
-        // Last sync time
-        var lastSync = Application.Storage.getValue("last_sync_time");
-        var lastSyncText = WatchUi.loadResource(Rez.Strings.NeverSynced) as Lang.String;
-
-        if (lastSync != null) {
-            // TODO: Format timestamp
-            lastSyncText = lastSync.toString();
-        }
-
-        dc.drawText(
-            dc.getWidth() / 2,
-            120,
-            Graphics.FONT_SMALL,
-            WatchUi.loadResource(Rez.Strings.LastSync) as Lang.String + " " + lastSyncText,
+            "Test Sync",
             Graphics.TEXT_JUSTIFY_CENTER
         );
 
         // Server status
         var serverUrl = Application.Properties.getValue("serverUrl");
-        var statusText = serverUrl != null ? "Configured" : "Not Configured";
+        var statusText = serverUrl != null ? "Server: Connected" : "Server: Not Configured";
 
         dc.drawText(
             dc.getWidth() / 2,
-            180,
+            80,
             Graphics.FONT_TINY,
             statusText,
+            Graphics.TEXT_JUSTIFY_CENTER
+        );
+
+        // Test audiobook info
+        dc.drawText(
+            dc.getWidth() / 2,
+            120,
+            Graphics.FONT_SMALL,
+            "Will sync:",
+            Graphics.TEXT_JUSTIFY_CENTER
+        );
+
+        dc.drawText(
+            dc.getWidth() / 2,
+            150,
+            Graphics.FONT_TINY,
+            "Robot Novels",
+            Graphics.TEXT_JUSTIFY_CENTER
+        );
+
+        // Instructions
+        dc.drawText(
+            dc.getWidth() / 2,
+            200,
+            Graphics.FONT_XTINY,
+            "Press SELECT to sync",
             Graphics.TEXT_JUSTIFY_CENTER
         );
     }

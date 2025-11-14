@@ -29,8 +29,8 @@ class SyncDelegate extends Communications.SyncDelegate {
     function initialize() {
         SyncDelegate.initialize();
 
-        // Get sync list from Application.Properties (set by Garmin Connect)
-        mSyncList = Application.Properties.getValue("syncList");
+        // Get sync list from Application.Storage
+        mSyncList = Application.Storage.getValue("syncList");
         if (mSyncList == null || !(mSyncList instanceof Lang.Array)) {
             mSyncList = [] as Lang.Array;
         }
@@ -87,8 +87,14 @@ class SyncDelegate extends Communications.SyncDelegate {
         System.println("Fetching metadata for audiobook: " + ratingKey);
 
         // Fetch metadata from Plex
-        var url = PlexConfig.getServerUrl() + "/library/metadata/" + ratingKey;
-        var params = {"X-Plex-Token" => PlexConfig.getAuthToken()};
+        var serverUrl = PlexConfig.getServerUrl();
+        var authToken = PlexConfig.getAuthToken();
+        System.println("DEBUG: Server URL: " + serverUrl);
+        System.println("DEBUG: Auth token length: " + authToken.length());
+
+        var url = serverUrl + "/library/metadata/" + ratingKey;
+        System.println("DEBUG: Full URL: " + url);
+        var params = {"X-Plex-Token" => authToken};
         var options = {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
             :headers => {"Accept" => "application/json"},
@@ -111,7 +117,6 @@ class SyncDelegate extends Communications.SyncDelegate {
         System.println("Metadata received for: " + context[:ratingKey]);
 
         // Parse audiobook metadata
-        // Expected structure: {MediaContainer: {Metadata: [{...}]}}
         var container = data["MediaContainer"];
         if (container == null) {
             Media.notifySyncComplete("Invalid metadata response");
@@ -128,44 +133,96 @@ class SyncDelegate extends Communications.SyncDelegate {
 
         // Extract audiobook info
         var title = audiobook["title"];
-        var author = audiobook["grandparentTitle"]; // Artist/author name
-        var duration = audiobook["duration"];
+        var author = audiobook["parentTitle"]; // Parent is the artist/author
 
-        // Extract parts/chapters
-        var mediaParts = audiobook["Media"];
-        if (mediaParts == null || !(mediaParts instanceof Lang.Array)) {
+        // Store audiobook metadata for later use
+        mCurrentAudiobook = {
+            :ratingKey => context[:ratingKey],
+            :title => title,
+            :author => author
+        };
+
+        // Audiobooks have children (tracks), fetch them
+        var childrenKey = audiobook["key"];
+        if (childrenKey == null) {
+            Media.notifySyncComplete("No children key found");
+            return;
+        }
+
+        System.println("Fetching children for audiobook: " + childrenKey);
+
+        // Fetch children (tracks/chapters)
+        var url = PlexConfig.getServerUrl() + childrenKey;
+        var params = {"X-Plex-Token" => PlexConfig.getAuthToken()};
+        var options = {
+            :method => Communications.HTTP_REQUEST_METHOD_GET,
+            :headers => {"Accept" => "application/json"},
+            :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+        };
+
+        var childrenContext = {:ratingKey => context[:ratingKey]};
+        var delegate = new RequestDelegate(method(:onAudiobookChildren), childrenContext);
+        delegate.makeWebRequest(url, params, options);
+    }
+
+    // Callback when audiobook children (tracks) are fetched
+    function onAudiobookChildren(responseCode as Lang.Number, data as Lang.Dictionary or Null, context as Lang.Dictionary) as Void {
+        if (responseCode != 200 || data == null) {
+            System.println("Failed to fetch children: " + responseCode);
+            Media.notifySyncComplete("Failed to fetch audiobook tracks (code " + responseCode + ")");
+            return;
+        }
+
+        System.println("Children received for: " + context[:ratingKey]);
+
+        // Parse children (tracks)
+        var container = data["MediaContainer"];
+        if (container == null) {
+            Media.notifySyncComplete("Invalid children response");
+            return;
+        }
+
+        var tracks = container["Metadata"];
+        if (tracks == null || !(tracks instanceof Lang.Array) || tracks.size() == 0) {
             Media.notifySyncComplete("No audio files found");
             return;
         }
 
         mCurrentChapters = [] as Lang.Array;
 
-        for (var i = 0; i < mediaParts.size(); i++) {
-            var media = mediaParts[i] as Lang.Dictionary;
-            var parts = media["Part"];
-            if (parts != null && (parts instanceof Lang.Array)) {
-                for (var j = 0; j < parts.size(); j++) {
-                    var part = parts[j] as Lang.Dictionary;
-                    var chapter = {
+        // Process each track (handles both .m4b files and .mp3 files)
+        for (var i = 0; i < tracks.size(); i++) {
+            var track = tracks[i] as Lang.Dictionary;
+
+            // Each track has Media → Part structure
+            var mediaParts = track["Media"];
+            if (mediaParts == null || !(mediaParts instanceof Lang.Array)) {
+                continue; // Skip tracks without media
+            }
+
+            for (var j = 0; j < mediaParts.size(); j++) {
+                var media = mediaParts[j] as Lang.Dictionary;
+                var parts = media["Part"];
+                if (parts != null && (parts instanceof Lang.Array)) {
+                    for (var k = 0; k < parts.size(); k++) {
+                        var part = parts[k] as Lang.Dictionary;
+                        var fileFormat = part["container"]; // mp3, m4a, m4b, etc.
+                        var chapter = {
                         :partId => part["id"],
                         :key => part["key"],
                         :duration => part["duration"],
                         :size => part["size"],
+                        :format => fileFormat,
                         :title => "Chapter " + (mCurrentChapters.size() + 1)
                     };
                     mCurrentChapters.add(chapter);
+                    }
                 }
             }
         }
 
-        // Store audiobook info
-        mCurrentAudiobook = {
-            :ratingKey => context[:ratingKey],
-            :title => title,
-            :author => author,
-            :duration => duration,
-            :tracks => [] as Lang.Array // Will populate with ContentRef IDs
-        };
+        // Add tracks array to existing audiobook metadata
+        mCurrentAudiobook[:tracks] = [] as Lang.Array; // Will populate with ContentRef IDs
 
         mCurrentChapterIndex = 0;
         mTotalItems = mSyncList.size() + mCurrentChapters.size();
@@ -174,6 +231,25 @@ class SyncDelegate extends Communications.SyncDelegate {
 
         // Start downloading chapters
         downloadNextChapter();
+    }
+
+    // Convert container format to Media encoding constant
+    private function getMediaEncoding(container as Lang.String or Null) as Media.Encoding {
+        if (container == null) {
+            return Media.ENCODING_MP3; // Default to MP3
+        }
+
+        if (container.equals("mp3")) {
+            return Media.ENCODING_MP3;
+        } else if (container.equals("m4a") || container.equals("m4b") || container.equals("mp4")) {
+            return Media.ENCODING_M4A; // M4B/M4A are MP4 containers for audiobooks
+        } else if (container.equals("wav")) {
+            return Media.ENCODING_WAV;
+        }
+
+        // Default to MP3 for unknown formats
+        System.println("Unknown container format: " + container + ", defaulting to MP3");
+        return Media.ENCODING_MP3;
     }
 
     // Download next chapter for current audiobook
@@ -185,7 +261,7 @@ class SyncDelegate extends Communications.SyncDelegate {
 
             // Remove from sync list
             mSyncList.remove(mSyncList[0]);
-            Application.Properties.setValue("syncList", mSyncList);
+            Application.Storage.setValue("syncList", mSyncList);
 
             updateProgress();
 
@@ -196,38 +272,72 @@ class SyncDelegate extends Communications.SyncDelegate {
 
         var chapter = mCurrentChapters[mCurrentChapterIndex] as Lang.Dictionary;
         var partKey = chapter[:key] as Lang.String;
+        var fileFormat = chapter[:format]; // Get detected format
 
         System.println("Downloading chapter " + (mCurrentChapterIndex + 1) + "/" + mCurrentChapters.size());
+        System.println("File format: " + fileFormat);
 
-        // Download audio file
+        // Download audio file with correct encoding
         var url = PlexConfig.getServerUrl() + partKey;
+        System.println("Download URL: " + url);
+
+        var encoding = getMediaEncoding(fileFormat);
+        System.println("Using encoding: " + encoding);
+
         var params = {"X-Plex-Token" => PlexConfig.getAuthToken()};
         var options = {
             :method => Communications.HTTP_REQUEST_METHOD_GET,
             :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_AUDIO,
-            :mediaEncoding => Media.ENCODING_MP3
+            :mediaEncoding => encoding
         };
 
         var context = {:chapterIndex => mCurrentChapterIndex};
         var delegate = new RequestDelegate(method(:onChapterDownloaded), context);
-        delegate.makeWebRequest(url, params, options);
+
+        try {
+            delegate.makeWebRequest(url, params, options);
+        } catch (ex) {
+            System.println("Exception initiating download: " + ex.getErrorMessage());
+            Media.notifySyncComplete("Download error: " + ex.getErrorMessage());
+        }
     }
 
     // Callback when chapter is downloaded
     function onChapterDownloaded(responseCode as Lang.Number, data as Media.Content or Null, context as Lang.Dictionary) as Void {
-        if (responseCode != 200 || data == null) {
-            System.println("Failed to download chapter: " + responseCode);
-            Media.notifySyncComplete("Failed to download chapter (code " + responseCode + ")");
+        var chapterIndex = context[:chapterIndex] as Lang.Number;
+
+        if (responseCode != 200) {
+            System.println("Download failed for chapter " + (chapterIndex + 1) + ": HTTP " + responseCode);
+            Media.notifySyncComplete("Download failed: HTTP " + responseCode);
             return;
         }
 
-        var chapterIndex = context[:chapterIndex] as Lang.Number;
-        System.println("Chapter " + (chapterIndex + 1) + " downloaded");
+        if (data == null) {
+            System.println("Download failed for chapter " + (chapterIndex + 1) + ": No content received");
+            Media.notifySyncComplete("Download failed: No content");
+            return;
+        }
+
+        System.println("Chapter " + (chapterIndex + 1) + " downloaded successfully");
 
         // Store Content ID
         var chapter = mCurrentChapters[chapterIndex] as Lang.Dictionary;
         var contentRef = data.getContentRef();
-        chapter[:refId] = contentRef.getId();
+
+        if (contentRef == null) {
+            System.println("Error: No content reference for chapter " + (chapterIndex + 1));
+            Media.notifySyncComplete("Download failed: No content reference");
+            return;
+        }
+
+        var refId = contentRef.getId();
+        if (refId == null) {
+            System.println("Error: No content ID for chapter " + (chapterIndex + 1));
+            Media.notifySyncComplete("Download failed: No content ID");
+            return;
+        }
+
+        chapter[:refId] = refId;
         mCurrentChapters[chapterIndex] = chapter;
 
         // Add to audiobook tracks

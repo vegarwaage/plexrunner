@@ -33,6 +33,18 @@ class PlexRunnerApp extends Application.AudioContentProviderApp {
             mPositionSyncTimer.start(method(:syncPositionsToPlexPeriodic), 300000, true); // 5 min
             System.println("Started periodic position sync timer");
         }
+
+        // AUTO-SYNC FOR TESTING: Automatically trigger sync if there's a sync list
+        var syncList = Application.Storage.getValue("syncList");
+        if (syncList == null || !(syncList instanceof Lang.Array) || syncList.size() == 0) {
+            // No sync list - create test list with Robot Novels
+            System.println("AUTO-SYNC: No sync list found, creating test list with Robot Novels (9549)");
+            syncList = ["9549"];
+            Application.Storage.setValue("syncList", syncList);
+        }
+
+        System.println("AUTO-SYNC: Found " + syncList.size() + " audiobooks in sync list, triggering sync...");
+        Communications.startSync2({:message => "Auto-syncing audiobooks..."});
     }
 
     // Handle messages from companion app
@@ -105,8 +117,18 @@ class PlexRunnerApp extends Application.AudioContentProviderApp {
         return new SyncDelegate();
     }
 
-    // Note: SyncConfigurationView and PlaybackConfigurationView exist in source/views/
-    // but are not hooked up yet due to API signature issues with optional configuration
-    // view methods (same issue as Task 2). Views will be integrated once API requirements
-    // are clarified.
+    // Required: Return playback configuration view
+    function getPlaybackConfigurationView() {
+        return [new PlaybackConfigurationView(), new PlaybackConfigurationDelegate()];
+    }
+
+    // Required: Return sync configuration view
+    function getSyncConfigurationView() {
+        return [new SyncConfigurationView(), new SyncConfigurationDelegate()];
+    }
+
+    // Optional: Return initial view when app is launched directly
+    function getInitialView() {
+        return [new SyncConfigurationView(), new SyncConfigurationDelegate()];
+    }
 }
