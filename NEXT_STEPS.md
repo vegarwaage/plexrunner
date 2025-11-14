@@ -1,410 +1,252 @@
 # PlexRunner - Next Steps
 
-**Current Status:** Core AudioContentProviderApp implementation complete and merged to main.
-
-**Missing Feature:** On-watch browsing UI to select audiobooks for sync.
-
----
-
-## The Problem
-
-The current implementation expects audiobooks to be selected for sync via a `syncList` property that must be populated externally:
-
-```monkeyc
-// In SyncDelegate.mc line 32
-mSyncList = Application.Properties.getValue("syncList");
-```
-
-**There is currently no way for users to:**
-1. Browse their Plex audiobook library on the watch
-2. Select which audiobooks to download
-3. Trigger the sync process
-
-**The README incorrectly states:** "Browse and select audiobooks from Plex library (via Garmin Connect)"
-
-This is **not implemented**. The documentation assumed a companion mobile app would populate `syncList`, but we decided NOT to build a companion app.
+**Last Updated:** 2025-11-14
+**Current Status:** See STATUS.md for comprehensive project status
 
 ---
 
-## The Solution: Add On-Watch Browsing UI
+## Current Blocker: HTTP Code 0 Errors
 
-We need to port the browsing UI from the `feature/audiobook-mvp` branch (the deprecated first attempt), but adapt it to work with the AudioContentProviderApp architecture.
+The immediate priority is resolving network connectivity issues between the watch and Plex server.
 
-### What Needs to Be Ported
+### Problem
 
-From `feature/audiobook-mvp`, these views are needed:
-
-1. **AudiobookListView.mc** - Browse audiobooks from Plex
-2. **AudiobookDetailView.mc** - Show audiobook details and "Download" button
-3. **MainMenuView.mc** - Entry point with "Browse Audiobooks" option
-
-### What Needs to Be Changed
-
-The ported UI must be adapted because:
-
-**Old (audiobook-mvp):**
-- Standalone app with custom playback
-- Main menu is the app entry point
-- Downloads triggered manually from detail view
-
-**New (AudioContentProviderApp):**
-- Extends native Music Player
-- App has no "main" view (Music Player is the main UI)
-- Need to provide browsing via optional configuration view
-- Downloads trigger SyncDelegate
-
----
-
-## Implementation Plan
-
-### Phase 1: Create Browse Menu Structure
-
-**Goal:** Add "Browse Audiobooks" menu accessible from watch.
-
-**Tasks:**
-
-1. **Create BrowseMenuView.mc**
-   ```monkeyc
-   // Entry point for browsing
-   // Options: "All Audiobooks", "Continue Reading", "Collections"
-   ```
-
-2. **Hook up to PlexRunnerApp**
-   ```monkeyc
-   // PlexRunnerApp.mc
-   function getInitialView() {
-       return [new BrowseMenuView(), new BrowseMenuDelegate()];
-   }
-   ```
-
-   **Note:** This may conflict with AudioContentProviderApp requirements. Need to test if `getInitialView()` is allowed.
-
-   **Alternative:** Use `getSyncConfigurationView()` to show browse menu instead of sync status. This leverages the configuration view API we already have.
-
-**Files to create:**
-- `source/views/BrowseMenuView.mc`
-- `source/views/BrowseMenuDelegate.mc`
-
-**References:**
-- `feature/audiobook-mvp:source/views/MainMenuView.mc` (adapt)
-
----
-
-### Phase 2: Implement Audiobook List
-
-**Goal:** Display list of audiobooks from Plex.
-
-**Tasks:**
-
-1. **Port AudiobookListView.mc**
-   - Fetch audiobooks from Plex `/library/sections/{id}/all`
-   - Display as scrollable list (title, author)
-   - Handle loading/error states
-
-2. **Create AudiobookListDelegate.mc**
-   - Handle item selection → navigate to detail view
-
-3. **Integrate with PlexApi**
-   - Already exists, just need to call correct endpoints
-   - Filter for audiobooks (music library items)
-
-**Files to create:**
-- `source/views/AudiobookListView.mc`
-- `source/views/AudiobookListDelegate.mc`
-
-**References:**
-- `feature/audiobook-mvp:source/views/AudiobookListView.mc` (port with modifications)
-- `feature/audiobook-mvp:source/views/AudiobookListDelegate.mc`
-
-**Key Changes from MVP:**
-- Remove playback-related code
-- Focus only on browsing and selection
-
----
-
-### Phase 3: Implement Detail View & Download Trigger
-
-**Goal:** Show audiobook details and allow user to queue for download.
-
-**Tasks:**
-
-1. **Port AudiobookDetailView.mc**
-   - Display: Title, Author, Duration, Chapters
-   - Show "Download" or "Already Downloaded" status
-   - Menu option: "Add to Download Queue"
-
-2. **Create Download Queue Manager**
-   ```monkeyc
-   // DownloadQueue.mc
-   module DownloadQueue {
-       function addToQueue(ratingKey) {
-           // Add to syncList property
-           var current = Application.Properties.getValue("syncList") || [];
-           current.add(ratingKey);
-           Application.Properties.setValue("syncList", current);
-       }
-
-       function removeFromQueue(ratingKey) { ... }
-       function getQueue() { ... }
-   }
-   ```
-
-3. **Create Download Trigger UI**
-   - "Start Download" button in menu
-   - Calls SyncDelegate.onStartSync() when ready
-   - Shows progress (already implemented in SyncDelegate)
-
-**Files to create:**
-- `source/views/AudiobookDetailView.mc`
-- `source/views/AudiobookDetailDelegate.mc`
-- `source/DownloadQueue.mc`
-
-**References:**
-- `feature/audiobook-mvp:source/views/AudiobookDetailView.mc` (port with modifications)
-
-**Key Changes from MVP:**
-- Remove playback buttons
-- Add download queue functionality
-- Integrate with SyncDelegate instead of custom download manager
-
----
-
-### Phase 4: Optional Enhancements
-
-**Continue Reading View:**
-- Port ContinueReadingView to show audiobooks with saved positions
-- Uses PositionTracker.getAllPositions() to find in-progress books
-
-**Collections View:**
-- Port CollectionsView to browse by Plex collections
-- Useful for "Recently Added", "Unplayed", custom collections
-
-**Download Queue View:**
-- Show pending downloads before sync starts
-- Allow removing items from queue
-- Show total download size estimate
-
----
-
-## Technical Considerations
-
-### Architecture Constraint
-
-**Problem:** AudioContentProviderApp may not support custom views outside of optional configuration views.
-
-**Research Needed:**
-- Can AudioContentProviderApp have `getInitialView()`?
-- If not, must use configuration view methods
-- May need to hijack `getSyncConfigurationView()` to show browse menu
-
-**Test Approach:**
-1. Try adding `getInitialView()` and compile
-2. If fails, use `getSyncConfigurationView()` instead
-3. Document limitation if neither works
-
-### Integration Points
-
-**SyncDelegate expects:**
-```monkeyc
-mSyncList = Application.Properties.getValue("syncList");
-// Array of ratingKey strings
-```
-
-**BrowseUI must provide:**
-```monkeyc
-Application.Properties.setValue("syncList", ["12345", "67890"]);
-```
-
-**Trigger sync:**
-```monkeyc
-// From Browse UI, after adding to queue:
-var app = Application.getApp();
-var syncDelegate = app.getSyncDelegate();
-syncDelegate.onStartSync(); // May need different trigger mechanism
-```
-
-### Data Flow
+When PlexRunner tries to download audiobook metadata from Plex, it fails with HTTP Code 0:
 
 ```
-User Browse → Audiobook List View
-             ↓
-         Select Audiobook → Detail View
-                           ↓
-                       Add to Queue → DownloadQueue.addToQueue()
-                                     ↓
-                                 syncList property updated
-                                     ↓
-                              User triggers "Start Sync"
-                                     ↓
-                              SyncDelegate reads syncList
-                                     ↓
-                              Downloads audiobooks
-                                     ↓
-                              ContentIterator shows in Music Player
+Fetching metadata for audiobook: 9549
+DEBUG: Server URL: http://192.168.10.10:32400
+DEBUG: Auth token length: 20
+DEBUG: Full URL: http://192.168.10.10:32400/library/metadata/9549
+Failed to fetch metadata: 0
 ```
 
----
+**HTTP Code 0** means the request failed before reaching the server - typically a network configuration issue.
 
-## Implementation Phases
+### Potential Causes
 
-### Minimal Viable Product (MVP)
+1. **Watch not connected to WiFi**
+   - Settings may not persist after sideloading
+   - Need to verify watch WiFi connection
 
-**Goal:** Users can browse and download audiobooks.
+2. **Settings file not loading**
+   - Manual settings file may not work the same as Garmin Connect settings
+   - Watch might be using fallback values incorrectly
 
-**Includes:**
-- ✅ Phase 1: Browse Menu
-- ✅ Phase 2: Audiobook List
-- ✅ Phase 3: Detail View + Download Queue
-- ❌ Phase 4: Skip enhancements
+3. **Garmin network stack limitations**
+   - May not support HTTP to local IPs
+   - May require HTTPS even for local servers
+   - May have firewall/security restrictions
 
-**Estimated Effort:** 4-6 hours
+4. **Plex server accessibility**
+   - Server might not be listening on 192.168.10.10:32400
+   - Firewall might block connections from watch
 
-**Outcome:** Fully functional audiobook app
+### Investigation Plan
 
----
+**Step 1: Verify Watch WiFi (Most Likely)**
+- Check watch WiFi settings after sideloading
+- Confirm watch connected to same network as Plex server
+- Try triggering WiFi reconnection
 
-### Enhanced Version
+**Step 2: Test Simple HTTP Request**
+- Create test endpoint that just returns "OK"
+- Try fetching from watch to isolate Plex vs network issue
+- This will confirm if watch can make any HTTP request
 
-**Goal:** Full feature parity with Plex browsing.
+**Step 3: Test Different URLs**
+- Try plain IP: `http://192.168.10.10:32400`
+- Try hostname: `http://macbook-pro-2016.local:32400`
+- Try plex.direct: `https://192-168-10-10.{token}.plex.direct:32400`
+- See which (if any) works
 
-**Includes:**
-- ✅ All MVP phases
-- ✅ Continue Reading view
-- ✅ Collections browsing
-- ✅ Download queue management
+**Step 4: Check Garmin Developer Forums**
+- Search for "HTTP Code 0 Garmin"
+- Look for similar network connectivity issues
+- Check if there are special requirements for HTTP requests
 
-**Estimated Effort:** 8-10 hours
-
-**Outcome:** Rich browsing experience matching Plex web UI
-
----
-
-## Development Workflow
-
-### Step 1: Create Feature Branch
-
-```bash
-git checkout main
-git checkout -b feature/add-browsing-ui
-```
-
-### Step 2: Reference audiobook-mvp
-
-```bash
-# View MVP implementation for reference
-git show feature/audiobook-mvp:source/views/AudiobookListView.mc
-
-# DO NOT merge audiobook-mvp - it's deprecated
-# Port code manually with modifications
-```
-
-### Step 3: Implement Phase by Phase
-
-For each phase:
-1. Create new files
-2. Compile and test
-3. Commit with clear message
-4. Move to next phase
-
-### Step 4: Update Documentation
-
-When complete:
-- Update README.md (remove "via Garmin Connect" lie)
-- Update RELEASE_NOTES.md
-- Document new UI flow
-
-### Step 5: Merge to Main
-
-```bash
-git checkout main
-git merge feature/add-browsing-ui --no-ff
-git push origin main
-```
+**Step 5: Try Garmin Connect Sync (Not Sideload)**
+- Install via Garmin Connect app instead of sideloading
+- Settings file should load properly via Garmin Connect
+- May resolve issues with manual setup
 
 ---
 
-## Testing Checklist
+## After Code 0 is Resolved
 
-Before considering browsing complete, verify:
+Once the watch can successfully connect to Plex, the remaining work is straightforward:
 
-- [ ] Can browse audiobook library from watch
-- [ ] Can view audiobook details (title, author, chapters)
-- [ ] Can add audiobooks to download queue
-- [ ] Can trigger sync from watch UI
-- [ ] SyncDelegate receives correct syncList
-- [ ] Downloads complete successfully
-- [ ] Downloaded audiobooks appear in Music Player
-- [ ] Can remove items from download queue
-- [ ] Loading states work correctly
-- [ ] Error messages display properly
-- [ ] Works with empty library
-- [ ] Works with large library (100+ audiobooks)
+### 1. Complete End-to-End Testing (1-2 days)
+
+**Verify Core Functionality:**
+- [ ] Download single audiobook chapter successfully
+- [ ] Play audio in native Music Player
+- [ ] Navigate between chapters (next/previous)
+- [ ] Verify automatic chapter advancement
+- [ ] Test position tracking saves locally
+- [ ] Test position sync uploads to Plex
+
+**Test Edge Cases:**
+- [ ] Empty library handling
+- [ ] Network disconnection during sync
+- [ ] Low battery scenarios
+- [ ] Multiple audiobooks synced
+- [ ] Large audiobook (100+ chapters)
+
+**Performance Testing:**
+- [ ] Measure battery drain during playback
+- [ ] Test storage usage with multiple audiobooks
+- [ ] Verify sync speed acceptable for users
+
+### 2. Documentation Updates (1 day)
+
+**Update Existing Docs:**
+- [ ] README.md - Fix media encoding description
+- [ ] RELEASE_NOTES.md - Add v0.2.0 with companion app
+- [ ] TESTING.md - Add results from end-to-end testing
+
+**Create Missing Docs:**
+- [ ] SIDELOADING.md - Manual testing procedure (for developers)
+- [ ] TROUBLESHOOTING.md - Common issues and solutions
+- [ ] USER_GUIDE.md - End-user instructions (if needed)
+
+### 3. Prepare for Deployment (1-2 weeks)
+
+**Garmin Connect IQ Store:**
+- [ ] Create store listing assets
+  - App screenshots (watch + companion)
+  - Feature description
+  - Privacy policy
+- [ ] Test on additional watch models (if available)
+- [ ] Submit app for Connect IQ Store review
+- [ ] Address any feedback from Garmin review team
+
+**Companion App Deployment:**
+- [ ] Build production React Native app
+- [ ] Create App Store listing (iOS)
+  - Screenshots
+  - Description
+  - Privacy policy
+- [ ] Create Play Store listing (Android)
+  - Screenshots
+  - Description
+  - Privacy policy
+- [ ] Submit for review
+- [ ] Coordinate release dates
 
 ---
 
-## Open Questions
+## Future Enhancements (Post-Launch)
 
-1. **Can AudioContentProviderApp have getInitialView()?**
-   - Need to test compilation
-   - If not, must use configuration view approach
+These are nice-to-have features that can be added after initial release:
 
-2. **How to trigger SyncDelegate from UI?**
-   - SyncDelegate is triggered by Garmin Connect normally
-   - May need alternative trigger mechanism for on-watch initiation
-   - Research Communications.SyncDelegate API
+### Enhanced Media Support
+- Detect audio format dynamically from Plex metadata
+- Support additional formats (ADTS, WAV, etc.)
+- Implement smart transcoding requests to Plex
 
-3. **Should download queue persist?**
-   - Currently using Application.Properties (syncs to phone)
-   - Alternative: Application.Storage (local only)
-   - Which is better for user experience?
+### Improved Position Sync
+- Better connectivity detection
+- Retry logic for failed syncs
+- Sync queue management
+- Conflict resolution (if position changed on another device)
 
-4. **Configuration view integration?**
-   - We have SyncConfigurationView not integrated (API signature issue)
-   - Could we repurpose it as the browse menu entry point?
-   - Would solve the view integration problem
+### On-Watch Configuration Views
+- Integrate SyncConfigurationView (show sync progress)
+- Integrate PlaybackConfigurationView (show now playing)
+- Requires research into correct API signatures
 
----
+### User Experience Improvements
+- Progress indicators during download
+- Better error messages
+- Settings validation in companion app
+- Download queue management
 
-## Success Criteria
-
-**Browsing feature is complete when:**
-
-✅ User can browse Plex audiobooks from watch (no phone needed)
-✅ User can select audiobooks for download
-✅ User can trigger sync from watch
-✅ Downloads complete and audiobooks playable in Music Player
-✅ Documentation accurately describes the feature
-✅ No misleading claims about "companion app" or "Garmin Connect"
+### Advanced Features
+- Bookmarks/favorites
+- Playback speed control
+- Sleep timer
+- Collections support
 
 ---
 
 ## Timeline Estimate
 
-**Minimal Viable Product:**
-- Phase 1: 1-2 hours
-- Phase 2: 2-3 hours
-- Phase 3: 1-2 hours
-- Testing & docs: 1 hour
-- **Total: 5-8 hours**
+**Assuming Code 0 is resolved this week:**
 
-**Enhanced Version:**
-- MVP: 5-8 hours
-- Phase 4 enhancements: 3-4 hours
-- **Total: 8-12 hours**
+| Phase | Duration | Target Date |
+|-------|----------|-------------|
+| Debug Code 0 | 1-3 days | Nov 15-17 |
+| End-to-end testing | 1-2 days | Nov 18-19 |
+| Documentation updates | 1 day | Nov 20 |
+| Store submission prep | 3-5 days | Nov 21-25 |
+| Review & approval | 1-2 weeks | Dec 2-9 |
+| **Public Release** | - | **Mid-December 2025** |
 
----
-
-## Notes
-
-- This work should happen in a NEW branch (`feature/add-browsing-ui`)
-- Do NOT work in `feature/audiobook-mvp` (it's deprecated)
-- Do NOT work directly in `main` (keep clean)
-- Reference MVP code but port with modifications
-- Test compilation after each phase
-- Update documentation as you go
+**If Code 0 takes longer:** Add debugging time to all subsequent phases.
 
 ---
 
-**Last Updated:** Nov 11, 2025
-**Status:** Ready to implement
-**Next Action:** Create `feature/add-browsing-ui` branch and start Phase 1
+## How You Can Help
+
+### If you're debugging Code 0:
+
+1. Check watch WiFi settings after sideloading
+2. Try different server URL formats (IP vs hostname)
+3. Search Garmin forums for similar issues
+4. Test with a simple HTTP endpoint (non-Plex)
+5. Try installing via Garmin Connect instead of sideloading
+
+### If you want to contribute:
+
+1. **Test on different watch models**
+   - We've only tested on Forerunner 970
+   - Other watches may have different network behavior
+
+2. **Improve error handling**
+   - Better error messages for users
+   - Retry logic for network failures
+   - Graceful degradation when offline
+
+3. **Enhance companion app**
+   - Better loading states
+   - Improved error handling
+   - Additional Plex features (collections, filters)
+
+---
+
+## Questions to Answer
+
+Before deployment, we need to answer:
+
+1. **WiFi requirement:** Can watch connect to Plex over WiFi, or does it need cellular?
+2. **HTTPS requirement:** Does watch require HTTPS, or will HTTP work?
+3. **Settings file:** Will Garmin Connect settings work better than sideloaded settings?
+4. **Network restrictions:** Are there firewall/security restrictions on Garmin watches?
+
+---
+
+## Success Criteria
+
+The project is ready for public release when:
+
+✅ Watch successfully downloads audiobooks from Plex
+✅ Audio plays correctly in native Music Player
+✅ Position tracking works (local + Plex sync)
+✅ Companion app successfully triggers sync
+✅ All documentation complete and accurate
+✅ Tested on physical watch with real Plex server
+✅ No critical bugs or crashes
+✅ Reasonable battery life during playback
+
+---
+
+## Current Priority
+
+**#1 Priority:** Resolve HTTP Code 0 network errors
+
+Everything else is blocked until the watch can connect to Plex. Once that works, the rest should fall into place quickly.
+
+---
+
+**See STATUS.md for detailed current project status**

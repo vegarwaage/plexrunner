@@ -4,6 +4,8 @@
 
 PlexRunner integrates with Garmin's native Music Player to provide audiobooks from your Plex server. Select audiobooks via Garmin Connect on your phone, sync them to your watch, and enjoy them during phone-free runs.
 
+**📋 Current Project Status:** See [STATUS.md](STATUS.md) for development progress, known issues, and testing status.
+
 ## Features
 
 - ✅ Browse and select audiobooks from Plex library (via companion mobile app)
@@ -195,7 +197,12 @@ PlexRunner includes a React Native companion app for iOS and Android:
 
 ### Media Encoding
 
-Currently hardcoded to `Media.ENCODING_MP3`. Plex transcoding may be required for non-MP3 audiobooks.
+PlexRunner automatically detects audio format from Plex metadata and uses the appropriate encoding:
+- MP3 files → `Media.ENCODING_MP3`
+- M4A/M4B/MP4 files → `Media.ENCODING_M4A`
+- WAV files → `Media.ENCODING_WAV`
+
+See `SyncDelegate.mc:237-253` for format detection logic.
 
 ## Development
 
