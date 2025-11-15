@@ -1,8 +1,45 @@
 # PlexRunner AudioContentProviderApp - Release Notes
 
-**Version:** 0.1.0 (Initial Implementation)
+## Version 0.2.0 (Current Development)
+
+**Date:** 2025-11-14
+**Status:** Testing Phase - Network Connectivity Troubleshooting
+
+### Changes Since v0.1.0
+
+**Features Added:**
+- ✅ Dynamic media format detection (MP3/M4A/M4B/MP4/WAV) - See SyncDelegate.mc:237-253
+- ✅ Auto-sync on app start for testing convenience
+- ✅ HTTP fallback configuration for watch compatibility
+- ✅ Debug logging for network diagnostics
+
+**Approach Changes:**
+- Sideloading via USB with manual settings file for development testing
+- Removed dependency on companion app (experimental companion app exists in codebase but unused)
+- Configuration planned via Garmin Connect app settings for end users
+
+**Known Issues:**
+- ❌ HTTP Code 0 errors when watch tries to connect to Plex server
+- Settings file loading on physical watch needs verification
+- Network connectivity between watch and Plex server requires investigation
+
+**Testing Status:**
+- ✅ Builds successfully with zero errors/warnings
+- ✅ Simulator testing confirms fallback values load correctly
+- ❌ Physical watch testing blocked by network connectivity issues
+
+**Next Steps:**
+- Resolve HTTP Code 0 network errors (critical blocker)
+- Complete end-to-end testing on physical watch
+- Determine final configuration approach for end users
+- Deploy to Garmin Connect IQ Store
+
+---
+
+## Version 0.1.0 (Initial Implementation)
+
 **Date:** 2025-11-11
-**Status:** Feature Complete - Requires Garmin Connect Companion App
+**Status:** Core Implementation Complete
 
 ## Overview
 
@@ -161,14 +198,7 @@ d17319b - Tasks 13-14: ContentIterator pattern (corrected architecture)
 
 **Total Commits:** 15 (plus 1 developer key .gitignore)
 
-## Known Limitations
-
-### Blocking for End Users
-
-❌ **Missing Garmin Connect Companion App**
-- Requires mobile app to browse Plex library
-- Companion app must populate `syncList` property
-- Cannot be fully tested end-to-end without it
+## Known Limitations (v0.1.0)
 
 ### Non-Blocking Limitations
 
@@ -177,15 +207,12 @@ d17319b - Tasks 13-14: ContentIterator pattern (corrected architecture)
 - Does not affect functionality
 - Workaround: Use Garmin Connect app
 
-⚠️ **Hardcoded MP3 Encoding**
-- Only MP3 audiobooks supported
-- Non-MP3 files require Plex transcoding
-- Enhancement for future versions
-
 ⚠️ **Placeholder Duration in PositionSync**
 - Technical debt in `syncAllPositions()` method
 - Uses placeholder value instead of actual duration
 - May affect Plex Timeline API accuracy
+
+**Note:** Media encoding limitation and companion app dependency were resolved in v0.2.0.
 
 See LIMITATIONS.md for complete details and workarounds.
 
@@ -243,43 +270,23 @@ See LIMITATIONS.md "Testing Recommendations" section for comprehensive test cove
 - ✅ `docs/plans/2025-11-11-audiobook-provider-redesign.md` - Architecture design
 - ✅ `docs/plans/2025-11-11-audio-provider-implementation.md` - Implementation plan (with errors noted)
 
-## Next Steps
+## Next Steps (v0.1.0 → v0.2.0)
 
-### Required for Deployment
+**Completed in v0.2.0:**
+- ✅ Multi-format support (MP3/M4A/M4B/MP4/WAV detection)
+- ✅ Sideloading approach with manual settings file
+- ✅ HTTP fallback configuration
+- ✅ Debug logging for diagnostics
 
-1. **Develop Garmin Connect Companion App**
-   - Browse Plex library
-   - Select audiobooks for sync
-   - Populate `syncList` property
-   - Trigger sync via Garmin Connect SDK
+**Still Pending:**
+- ⏳ End-to-end testing on physical watch (blocked by network errors)
+- ⏳ Configuration approach for end users
+- ⏳ Garmin Connect IQ Store deployment
 
-2. **End-to-End Testing**
-   - Test with real Plex server
-   - Verify sync workflow
-   - Test position tracking accuracy
-   - Monitor battery impact
-
-### Optional Enhancements
-
-3. **Integrate Configuration Views**
-   - Research correct API signatures
-   - Hook up SyncConfigurationView
-   - Hook up PlaybackConfigurationView
-
-4. **Multi-Format Support**
-   - Detect audio format from Plex metadata
-   - Support M4A, WAV, ADTS encodings
-   - Test transcoding scenarios
-
-5. **Fix Placeholder Duration**
-   - Store duration in PositionTracker
-   - Pass actual duration to PositionSync
-   - Verify Plex Timeline API accuracy
-
-6. **Enhance Position Sync**
-   - Better connectivity detection
-   - Retry logic for failed syncs
-   - Sync queue management
+**Optional Enhancements:**
+- Integrate Configuration Views
+- Fix Placeholder Duration
+- Enhance Position Sync (better connectivity detection, retry logic)
 
 ## Acknowledgments
 
@@ -292,21 +299,21 @@ See LIMITATIONS.md "Testing Recommendations" section for comprehensive test cove
 - Claude (AI assistant) - Implementation
 - Vegar (Human partner) - Requirements, testing, guidance
 
-## Conclusion
+## Conclusion (v0.1.0)
 
-PlexRunner AudioContentProviderApp is **feature complete** and **production ready** from a technical perspective. The only blocking issue for end-user deployment is the missing Garmin Connect companion mobile app.
+PlexRunner AudioContentProviderApp core implementation was **feature complete** and **compiled successfully**.
 
-All core functionality works as designed:
+All core functionality was implemented:
 - ✅ Audiobook downloads from Plex
 - ✅ Native Music Player integration
 - ✅ Chapter navigation
 - ✅ Position tracking
 - ✅ Opportunistic position sync
 
-The codebase is well-structured, documented, and maintainable. Ready for the next phase of development.
+The codebase is well-structured, documented, and maintainable.
 
 ---
 
 **Build:** PlexRunner v0.1.0
 **Status:** ✅ Compiles Successfully
-**Deployment:** ⏳ Awaiting Garmin Connect Companion App
+**Next:** v0.2.0 added media format detection, sideloading approach, and diagnostic logging

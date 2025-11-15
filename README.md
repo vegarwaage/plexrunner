@@ -8,14 +8,13 @@ PlexRunner integrates with Garmin's native Music Player to provide audiobooks fr
 
 ## Features
 
-- ✅ Browse and select audiobooks from Plex library (via companion mobile app)
 - ✅ Download audiobooks to watch storage
 - ✅ Native Music Player integration (standard Garmin playback controls)
 - ✅ Hierarchical navigation (audiobooks → chapters)
 - ✅ Position tracking with opportunistic sync to Plex
 - ✅ 100% offline playback support
 - ✅ Battery-efficient native audio session management
-- ✅ React Native companion app for iOS and Android
+- ✅ Dynamic media format detection (MP3/M4A/M4B/MP4/WAV)
 
 ## Architecture
 
@@ -67,16 +66,15 @@ Settings sync automatically to watch via `Application.Properties`.
 
 ## Usage Flow
 
-### 1. Sync Audiobooks (via Companion App)
+### 1. Sync Audiobooks
 
-1. Install PlexRunner Companion app on your phone (see `companion/` directory)
-2. Configure Plex server connection in companion app
-3. Browse your Plex audiobook library
-4. Select audiobooks to sync to watch
-5. Tap "Sync to Watch" button
+**Current Development Testing:**
+PlexRunner is currently in testing using sideloading with manual configuration. See [STATUS.md](STATUS.md) for current development status and known issues.
 
-**What happens:**
-- Companion app sends audiobook list to watch via Garmin SDK
+**Planned for End Users:**
+Configuration will be available through Garmin Connect app settings (serverUrl, authToken, libraryName). The exact sync mechanism for selecting which audiobooks to download is still being determined.
+
+**What happens during sync:**
 - Watch downloads audiobook metadata from Plex
 - Audio files download sequentially with progress updates
 - ContentRef IDs registered with media system
@@ -185,15 +183,11 @@ The optional configuration view methods (`getSyncConfigurationView()` and `getPl
 
 **Workaround:** Check Garmin Connect app for sync status.
 
-### Companion Mobile App
+### Experimental Companion Mobile App
 
-PlexRunner includes a React Native companion app for iOS and Android:
-- Browse Plex library on phone with cover art
-- Select audiobooks for sync
-- Send sync list to watch via Garmin Connect IQ SDK
-- Simple setup and configuration
+**Note:** The `companion/` directory contains an experimental React Native app that was built when it was thought to be the only way to configure settings. This approach has not been tested and may not be necessary, as Garmin Connect app settings may provide sufficient configuration.
 
-**Location:** See `companion/` directory for source code and documentation.
+**Status:** Unused/experimental - not part of current development or deployment plans.
 
 ### Media Encoding
 
